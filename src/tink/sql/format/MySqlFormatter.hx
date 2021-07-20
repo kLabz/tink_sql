@@ -36,7 +36,7 @@ class MySqlFormatter extends SqlFormatter<MysqlColumnInfo, MysqlKeyInfo> {
     }
 
   override function toDataType(type:SqlType):DataType {
-    inline function parseDefault<T>(parser:String -> T): T
+    inline function parseDefault<T>(parser:String -> T): Null<T>
       return if (type.defaultValue == null) null else parser(type.defaultValue);
     return switch type {
       case {name: 'TINYINT', values: ['1']}:
@@ -121,7 +121,7 @@ class MySqlFormatter extends SqlFormatter<MysqlColumnInfo, MysqlKeyInfo> {
       case AddKey(key):
         sql('ADD').add(defineKey(key));
     }
-    
+
   override function insertInto<Db, Row:{}>(insert:InsertOperation<Db, Row>) {
     return sql(insert.replace ? 'REPLACE' : 'INSERT')
       .add('IGNORE', insert.ignore)
@@ -148,7 +148,7 @@ class MySqlFormatter extends SqlFormatter<MysqlColumnInfo, MysqlKeyInfo> {
     }
 
   override public function parseColumn(res:MysqlColumnInfo):Column
-    return {  
+    return {
       name: res.Field,
       nullable: res.Null == 'YES',
       type: parseType(res.Type, res.Extra.indexOf('auto_increment') > -1, res.Default),
@@ -168,13 +168,13 @@ class MySqlFormatter extends SqlFormatter<MysqlColumnInfo, MysqlKeyInfo> {
       }
     return store.get();
   }
-  
+
   override function call<Row:{}>(op:CallOperation<Row>):Statement
     return sql('CALL')
       .add(op.name)
       .parenthesis(
         separated(
-          op.arguments.map(function (arg) 
+          op.arguments.map(function (arg)
             return expr(arg)
           )
         )
